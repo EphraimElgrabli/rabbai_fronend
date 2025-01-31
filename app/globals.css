@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* In your global CSS or a specific Tailwind config file */
+.flip-vertical {
+  @apply transform scale-x-[-1];
+}
