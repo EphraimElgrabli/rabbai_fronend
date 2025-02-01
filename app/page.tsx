@@ -1,16 +1,48 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 
-const QAButton = ({ qaList, isOpen, onClick }) => (
+const NavBar = () => {
+  const pathname = usePathname();
+
+  return (
+    <div className="fixed top-6 right-1/2 transform translate-x-1/2 z-10">
+      <div className="bg-[#E6DABE] rounded-full px-2 py-1 flex gap-1">
+        <Link
+          href="/about"
+          className={`px-4 py-1.5 rounded-full text-[#5a4d3a] transition-colors ${pathname === "/about"
+            ? "bg-[#FFF6E2]"
+            : "hover:bg-[#d4c4a8]"
+            }`}
+        >
+          אודות
+        </Link>
+        <Link
+          href="/"
+          className={`px-4 py-1.5 rounded-full text-[#5a4d3a] transition-colors ${pathname === "/"
+            ? "bg-[#FFF6E2]"
+            : "hover:bg-[#d4c4a8]"
+            }`}
+        >
+          צ׳אט
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+const QAButton = ({ qaList, isOpen, onClick, buttonRef }) => (
   <div className="flex flex-col items-start w-full">
     <button
+      ref={buttonRef}
       onClick={onClick}
       className="mb-2 px-4 py-2 bg-[#afa083] text-[#5a4d3a] rounded-lg hover:bg-[#9f9073] transition-colors"
     >
       {isOpen ? "החבא מקורות שו״ת" : "הצג מקורות שו״ת"}
     </button>
-    
+
     {isOpen && (
       <div className="w-full max-h-60 overflow-y-auto bg-[#fff6e2] rounded-lg p-4 mb-4">
         {qaList.map((qa, index) => (
@@ -36,6 +68,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [openQAIndex, setOpenQAIndex] = useState(null);
   const messagesEndRef = useRef(null);
+  const qaButtonRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -44,6 +77,12 @@ export default function Home() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, openQAIndex]);
+
+  useEffect(() => {
+    if (openQAIndex !== null && qaButtonRef.current) {
+      qaButtonRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [openQAIndex]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -54,10 +93,10 @@ export default function Home() {
       text: input,
       isUser: true,
     };
-    
+
     setMessages(prev => [...prev, newMessage]);
     setInput("");
-    
+
     try {
       setIsLoading(true);
       const response = await fetch("http://localhost:8000/ask", {
@@ -69,7 +108,7 @@ export default function Home() {
       });
 
       const data = await response.json();
-      
+
       // Add main answer with Q&A list
       setMessages(prev => [
         ...prev,
@@ -80,7 +119,7 @@ export default function Home() {
           qaList: data.qa_list,
         }
       ]);
-      
+
     } catch (error) {
       console.error("Error:", error);
       setMessages(prev => [
@@ -98,6 +137,7 @@ export default function Home() {
 
   return (
     <div className="flex h-screen items-center justify-center">
+      <NavBar />
       <div className="relative w-[95%] h-[90%] rounded-3xl bg-[#E6DABE] flex flex-col">
         <div className="absolute top-4 right-4 text-xs text-[#FFF6E2]">בס"ד</div>
 
@@ -110,16 +150,14 @@ export default function Home() {
                   className={`flex ${message.isUser ? "justify-end" : "justify-start"} mb-4`}
                 >
                   <div
-                    className={`max-w-[70%] rounded-lg p-4 ${
-                      message.isUser
-                        ? "bg-[#FFF6E2] ml-4"
-                        : "bg-[#d4c4a8] mr-4"
-                    }`}
+                    className={`max-w-[70%] rounded-lg p-4 ${message.isUser
+                      ? "bg-[#FFF6E2] ml-4"
+                      : "bg-[#d4c4a8] mr-4"
+                      }`}
                   >
                     <p
-                      className={`text-right whitespace-pre-line ${
-                        message.isUser ? "text-gray-800" : "text-[#5a4d3a]"
-                      }`}
+                      className={`text-right whitespace-pre-line ${message.isUser ? "text-gray-800" : "text-[#5a4d3a]"
+                        }`}
                     >
                       {message.text}
                     </p>
@@ -131,6 +169,7 @@ export default function Home() {
                       qaList={message.qaList}
                       isOpen={openQAIndex === index}
                       onClick={() => setOpenQAIndex(openQAIndex === index ? null : index)}
+                      buttonRef={openQAIndex === index ? qaButtonRef : null}
                     />
                   </div>
                 )}
@@ -154,9 +193,8 @@ export default function Home() {
               type="button"
               onClick={handleSend}
               disabled={isLoading}
-              className={`mr-4 h-12 w-12 ${
-                isLoading ? "bg-[#EEE]" : "bg-[#FFF6E2]"
-              } rounded-full flex items-center justify-center hover:bg-[#fff]`}
+              className={`mr-4 h-12 w-12 ${isLoading ? "bg-[#EEE]" : "bg-[#FFF6E2]"
+                } rounded-full flex items-center justify-center hover:bg-[#fff]`}
             >
               <img src="/send-icon.svg" alt="Send" className="flip-vertical" />
             </button>
