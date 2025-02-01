@@ -2,10 +2,39 @@
 
 import React, { useState, useRef, useEffect } from "react";
 
+const QAButton = ({ qaList, isOpen, onClick }) => (
+  <div className="flex flex-col items-start w-full">
+    <button
+      onClick={onClick}
+      className="mb-2 px-4 py-2 bg-[#afa083] text-[#5a4d3a] rounded-lg hover:bg-[#9f9073] transition-colors"
+    >
+      {isOpen ? "החבא מקורות שו״ת" : "הצג מקורות שו״ת"}
+    </button>
+    
+    {isOpen && (
+      <div className="w-full max-h-60 overflow-y-auto bg-[#fff6e2] rounded-lg p-4 mb-4">
+        {qaList.map((qa, index) => (
+          <div key={index} className="mb-4 last:mb-0 border-b border-[#E6DABE] last:border-0 pb-4 last:pb-0">
+            <div className="mb-2">
+              <span className="font-medium text-[#5a4d3a] block text-right">:שאלה</span>
+              <p className="text-right text-gray-800">{qa.question}</p>
+            </div>
+            <div>
+              <span className="font-medium text-[#5a4d3a] block text-right">:תשובה</span>
+              <p className="text-right text-gray-800">{qa.answer}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+);
+
 export default function Home() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [openQAIndex, setOpenQAIndex] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -14,7 +43,7 @@ export default function Home() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, openQAIndex]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -41,28 +70,17 @@ export default function Home() {
 
       const data = await response.json();
       
-      // Add main answer
+      // Add main answer with Q&A list
       setMessages(prev => [
         ...prev,
         {
           id: Date.now() + 1,
           text: data.answer,
           isUser: false,
+          qaList: data.qa_list,
         }
       ]);
-
-      // Add each Q&A pair as separate messages
-      data.qa_list.forEach((qa, index) => {
-        setMessages(prev => [
-          ...prev,
-          {
-            id: Date.now() + index + 2,
-            text: `Question:\n${qa.question}\n\nAnswer:\n${qa.answer}`,
-            isUser: false,
-            isQA: true,
-          }
-        ]);
-      });
+      
     } catch (error) {
       console.error("Error:", error);
       setMessages(prev => [
@@ -86,28 +104,36 @@ export default function Home() {
         {/* Messages container */}
         <div className="h-[calc(100%-80px)] overflow-y-auto px-4 pt-12">
           <div className="flex flex-col w-full">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.isUser ? "justify-end" : "justify-start"} mb-4`}
-              >
+            {messages.map((message, index) => (
+              <div key={message.id}>
                 <div
-                  className={`max-w-[70%] rounded-lg p-4 ${
-                    message.isUser
-                      ? "bg-[#FFF6E2] ml-4"
-                      : message.isQA
-                      ? "bg-[#cfc0a3]"
-                      : "bg-[#d4c4a8] mr-4"
-                  }`}
+                  className={`flex ${message.isUser ? "justify-end" : "justify-start"} mb-4`}
                 >
-                  <p
-                    className={`text-right whitespace-pre-line ${
-                      message.isUser ? "text-gray-800" : "text-[#5a4d3a]"
+                  <div
+                    className={`max-w-[70%] rounded-lg p-4 ${
+                      message.isUser
+                        ? "bg-[#FFF6E2] ml-4"
+                        : "bg-[#d4c4a8] mr-4"
                     }`}
                   >
-                    {message.text}
-                  </p>
+                    <p
+                      className={`text-right whitespace-pre-line ${
+                        message.isUser ? "text-gray-800" : "text-[#5a4d3a]"
+                      }`}
+                    >
+                      {message.text}
+                    </p>
+                  </div>
                 </div>
+                {!message.isUser && message.qaList && (
+                  <div className="flex justify-start mb-4 pr-4">
+                    <QAButton
+                      qaList={message.qaList}
+                      isOpen={openQAIndex === index}
+                      onClick={() => setOpenQAIndex(openQAIndex === index ? null : index)}
+                    />
+                  </div>
+                )}
               </div>
             ))}
             {isLoading && (
@@ -121,7 +147,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Input container - fixed height */}
+        {/* Input container */}
         <div className="h-20 bg-[#E6DABE] rounded-b-3xl border-t border-[#d4c4a8] flex items-center px-4">
           <div className="w-full flex items-center">
             <button
