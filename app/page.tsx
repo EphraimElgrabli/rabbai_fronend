@@ -1,11 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 export default function Home() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -22,7 +31,6 @@ export default function Home() {
     
     try {
       setIsLoading(true);
-      // Send to backend
       const response = await fetch("http://localhost:8000/ask", {
         method: "POST",
         headers: {
@@ -33,18 +41,30 @@ export default function Home() {
 
       const data = await response.json();
       
-      
+      // Add main answer
       setMessages(prev => [
         ...prev,
         {
           id: Date.now() + 1,
-          text: data.answer, // Adjust based on your API response structure
+          text: data.answer,
           isUser: false,
         }
       ]);
+
+      // Add each Q&A pair as separate messages
+      data.qa_list.forEach((qa, index) => {
+        setMessages(prev => [
+          ...prev,
+          {
+            id: Date.now() + index + 2,
+            text: `Question:\n${qa.question}\n\nAnswer:\n${qa.answer}`,
+            isUser: false,
+            isQA: true,
+          }
+        ]);
+      });
     } catch (error) {
       console.error("Error:", error);
-      // Add error message
       setMessages(prev => [
         ...prev,
         {
@@ -60,41 +80,50 @@ export default function Home() {
 
   return (
     <div className="flex h-screen items-center justify-center">
-      <div className="relative w-[95%] h-[90%] rounded-3xl bg-[#E6DABE] flex flex-col items-center justify-center">
-        {/* Text at the top */}
+      <div className="relative w-[95%] h-[90%] rounded-3xl bg-[#E6DABE] flex flex-col">
         <div className="absolute top-4 right-4 text-xs text-[#FFF6E2]">בס"ד</div>
 
         {/* Messages container */}
-        <div className="flex flex-col w-full min-h-[500px] mt-4 overflow-y-auto px-4">
-        
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.isUser ? "justify-end" : "justify-start"} mb-4 w-full `} >
-              <div className={`max-w-[70%] rounded-lg p-4 ${
-                  message.isUser
-                    ? "bg-[#FFF6E2] ml-4"
-                    : "bg-[#d4c4a8] mr-4"
-                }`} >
-                <p className={`text-right ${message.isUser ? "text-gray-800" : "text-[#5a4d3a]"}`} >
-                  {message.text}
-                </p>
+        <div className="h-[calc(100%-80px)] overflow-y-auto px-4 pt-12">
+          <div className="flex flex-col w-full">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.isUser ? "justify-end" : "justify-start"} mb-4`}
+              >
+                <div
+                  className={`max-w-[70%] rounded-lg p-4 ${
+                    message.isUser
+                      ? "bg-[#FFF6E2] ml-4"
+                      : message.isQA
+                      ? "bg-[#cfc0a3]"
+                      : "bg-[#d4c4a8] mr-4"
+                  }`}
+                >
+                  <p
+                    className={`text-right whitespace-pre-line ${
+                      message.isUser ? "text-gray-800" : "text-[#5a4d3a]"
+                    }`}
+                  >
+                    {message.text}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
-
-          {isLoading && (
-            <div className="flex justify-start mb-4 w-full pr-4">
-              <div className="max-w-[70%] rounded-lg p-4 bg-[#d4c4a8]">
-                <p className="text-right text-[#5a4d3a]">...</p>
+            ))}
+            {isLoading && (
+              <div className="flex justify-start mb-4">
+                <div className="max-w-[70%] rounded-lg p-4 bg-[#d4c4a8]">
+                  <p className="text-right text-[#5a4d3a]">...</p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+            <div ref={messagesEndRef} />
+          </div>
         </div>
 
-        {/* Input area */}
-        <div className="absolute bottom-4 w-11/12">
-          <div className="flex items-center">
+        {/* Input container - fixed height */}
+        <div className="h-20 bg-[#E6DABE] rounded-b-3xl border-t border-[#d4c4a8] flex items-center px-4">
+          <div className="w-full flex items-center">
             <button
               type="button"
               onClick={handleSend}
@@ -103,11 +132,7 @@ export default function Home() {
                 isLoading ? "bg-[#EEE]" : "bg-[#FFF6E2]"
               } rounded-full flex items-center justify-center hover:bg-[#fff]`}
             >
-              <img
-                src="/send-icon.svg"
-                alt="Send"
-                className="flip-vertical"
-              />
+              <img src="/send-icon.svg" alt="Send" className="flip-vertical" />
             </button>
 
             <input
