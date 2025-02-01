@@ -4,10 +4,7 @@ import React, { useState } from "react";
 
 export default function Home() {
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState([
-    { id: 1, text: "Test user message", isUser: true },
-    { id: 2, text: "Test bot response", isUser: false }
-  ]);
+  const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSend = async () => {
@@ -35,9 +32,8 @@ export default function Home() {
       });
 
       const data = await response.json();
-      console.log("API Response:", data); // Debug API response
       
-      // Add bot response
+      
       setMessages(prev => [
         ...prev,
         {
@@ -69,22 +65,18 @@ export default function Home() {
         <div className="absolute top-4 right-4 text-xs text-[#FFF6E2]">בס"ד</div>
 
         {/* Messages container */}
-        <div className="flex flex-col w-full min-h-[500px] mt-4 overflow-y-auto px-4 border border-red-500">
-          {console.log("Rendering messages:", messages)} {/* Debugging */}
-          
+        <div className="flex flex-col w-full min-h-[500px] mt-4 overflow-y-auto px-4">
+        
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`flex ${message.isUser ? "justify-start" : "justify-end"} mb-4 w-full border border-black`}
-            >
-              <div
-                className={`max-w-[70%] rounded-lg p-4 ${
+              className={`flex ${message.isUser ? "justify-end" : "justify-start"} mb-4 w-full `} >
+              <div className={`max-w-[70%] rounded-lg p-4 ${
                   message.isUser
                     ? "bg-[#FFF6E2] ml-4"
                     : "bg-[#d4c4a8] mr-4"
-                }`}
-              >
-                <p className={`text-right ${message.isUser ? "text-gray-800" : "text-[#5a4d3a]"}`}>
+                }`} >
+                <p className={`text-right ${message.isUser ? "text-gray-800" : "text-[#5a4d3a]"}`} >
                   {message.text}
                 </p>
               </div>
@@ -92,7 +84,7 @@ export default function Home() {
           ))}
 
           {isLoading && (
-            <div className="flex justify-end mb-4 w-full pr-4">
+            <div className="flex justify-start mb-4 w-full pr-4">
               <div className="max-w-[70%] rounded-lg p-4 bg-[#d4c4a8]">
                 <p className="text-right text-[#5a4d3a]">...</p>
               </div>
