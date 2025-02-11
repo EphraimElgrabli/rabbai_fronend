@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  async rewrites() {
+    return [
+      {
+        source: '/api/qa/ask',
+        destination: 'http://127.0.0.1:8000/qa/ask', // Use IPv4 explicitly
+      },
+    ];
+  },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

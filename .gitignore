@@ -1,0 +1,56 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js build output
+.next/
+
+# Out directory (if used)
+out/
+
+# Vercel deployment
+.vercel/
+
+# Local environment variables
+.env.local
+.env*.local
+.env*.development
+.env*.production
+.env*.test
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Editor and IDE-specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+
+# TypeScript build files (if used)
+*.tsbuildinfo
+
+# Next.js cache
+.next/cache/
+
+# Coverage reports
+coverage/
+
+# Misc
+*.bak
+*.old
+
+# Static exports
+out/
